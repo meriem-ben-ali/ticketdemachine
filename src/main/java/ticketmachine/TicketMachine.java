@@ -10,7 +10,7 @@ package ticketmachine;
  */
 public class TicketMachine {
 	// The price of a ticket from this machine.
-	private final int price;
+	private int price;
 	// The amount of money entered by a customer so far.
 	private int balance;
 	// The total amount of money collected by this machine.
@@ -41,6 +41,18 @@ public class TicketMachine {
 	}
 
 	/**
+	 * Set a new price for the ticket.
+	 *
+	 * @param newPrice the new price for the ticket, must be greater than zero
+	 */
+	public void setPrice(int newPrice) {
+		if (newPrice <= 0) {
+			throw new IllegalArgumentException("Price must be positive");
+		}
+		price = newPrice;
+	}
+
+	/**
 	 * Return the total amount collected by the machine.
 	 *
 	 * @return the total amount collected by the machine.
@@ -63,25 +75,35 @@ public class TicketMachine {
 	 * @throws IllegalArgumentException if amount is not positive
 	 */
 	public void insertMoney(int amount) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException("Amount must be positive");
+		}
 		balance = balance + amount;
 	}
 
 	/**
-	 * Refunds the balance to customer
+	 * Refunds the balance to the customer and resets the balance to 0.
 	 *
 	 * @return the balance
 	 */
 	public int refund() {
 		System.out.println("Je vous rends : " + balance + " centimes");
-		return balance;
+		int refundedAmount = balance;
+		balance = 0; // reset the balance
+		return refundedAmount;
 	}
 
 	/**
-	 * Print a ticket. Update the total collected and reduce the balance 
+	 * Print a ticket. Update the total collected and reduce the balance.
 	 *
-	 * @return vrai si le ticket a été imprimé, faux sinon
+	 * @return true if the ticket was printed, false otherwise
 	 */
 	public boolean printTicket() {
+		if (balance < price) {
+			// Si pas assez d'argent, ne pas imprimer et retourner false
+			return false;
+		}
+
 		// Simulate the printing of a ticket.
 		System.out.println("##################");
 		System.out.println("# The BlueJ Line");
@@ -89,6 +111,20 @@ public class TicketMachine {
 		System.out.println("# " + price + " cents.");
 		System.out.println("##################");
 		System.out.println();
+
+		// Calculer l'excédent
+		int excess = balance - price;
+
+		// Ajouter le montant du ticket au total collecté
+		total += price;
+
+		// Rembourser l'excédent si nécessaire
+		if (excess > 0) {
+			System.out.println("Remboursement : " + excess + " centimes");
+		}
+
+		// Réinitialiser la balance après l'impression
+		balance = 0;
 		return true;
 	}
 }
