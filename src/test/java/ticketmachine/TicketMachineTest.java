@@ -1,7 +1,11 @@
 package ticketmachine;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class TicketMachineTest {
 	private static final int PRICE = 50; // Une constante
@@ -14,8 +18,10 @@ class TicketMachineTest {
 	}
 
 	@Test
+		// On vérifie que le prix affiché correspond au paramètre passé lors de l'initialisation
 		// S1 : le prix affiché correspond à l’initialisation.
 	void priceIsCorrectlyInitialized() {
+		// Paramètres : valeur attendue, valeur effective, message si erreur
 		assertEquals(PRICE, machine.getPrice(), "Initialisation incorrecte du prix");
 	}
 
@@ -24,54 +30,65 @@ class TicketMachineTest {
 	void insertMoneyChangesBalance() {
 		machine.insertMoney(10);
 		machine.insertMoney(20);
+		// Les montants ont été correctement additionnés
 		assertEquals(10 + 20, machine.getBalance(), "La balance n'est pas correctement mise à jour");
 	}
 
 	@Test
-		// S3 : N'imprime pas si pas assez d'argent
-	void nImprimePasSiBalanceInsuffisante() {
-		machine.insertMoney(PRICE - 1);
-		assertFalse(machine.printTicket(), "Pas assez d'argent, on ne doit pas imprimer");
+		// S3: on n’imprime pas leticket si le montant inséré est insuffisant
+	void notPrintIfMoneyIsInsufficient(){
+		machine.insertMoney(PRICE-1);
+		assertFalse(machine.printTicket(), "Le ticket ne doit pas pouvoir être imprimer");
 	}
 
 	@Test
-		// S4 : Imprime si assez d'argent
-	void imprimeSiBalanceSuffisante() {
+		// S4: on imprime le ticket si le montant inséré est suffisant
+	void printIfMoneyIsSufficient(){
 		machine.insertMoney(PRICE);
-		assertTrue(machine.printTicket(), "Il y a assez d'argent, on doit imprimer");
+		assertTrue(machine.printTicket(), "Le ticket doit s'imprimer");
 	}
 
 	@Test
-		// S5 : La balance est réinitialisée après l'impression
-	void balanceIsResetAfterPrinting() {
+		// S5: Quand on imprime un ticket la balance est décrémentée du prix du ticket
+	void decreaseBalanceWhenPrintTicket(){
 		machine.insertMoney(PRICE);
 		machine.printTicket();
-		assertEquals(0, machine.getBalance(), "La balance devrait être réinitialisée à 0 après impression");
+		assertEquals(machine.getBalance(), 0, "La balance doit être mise à jour lors de l'impression d'un ticket");
 	}
 
 	@Test
-		// S6 : L'argent excédentaire doit être retourné
-	void remainingMoneyIsReturnedAfterPrinting() {
-		machine.insertMoney(70); // On insère 70 centimes
-		boolean printed = machine.printTicket();
-		assertTrue(printed, "Le ticket devrait être imprimé");
-		assertEquals(0, machine.getBalance(), "La balance devrait être réinitialisée à 0");
-		assertEquals(20, machine.getTotal(), "Le total collecté devrait être 50");
+		// S6: le montant collecté est mis à jour quand on imprime un ticket (pas avant)
+	void collectMoneyWhenTicketIsPrint(){
+		machine.insertMoney(PRICE);
+		assertEquals(machine.getTotal(), 0, "Le total doit être mise à jour lors de l'impression d'un ticket");
+		machine.printTicket();
+		assertEquals(machine.getTotal(), PRICE, "Le total doit être mise à jour lors de l'impression d'un ticket");
 	}
 
 	@Test
-		// S7 : On peut rembourser de l'argent
-	void refundReturnsCorrectAmount() {
-		machine.insertMoney(100);
-		int refundedAmount = machine.refund();
-		assertEquals(100, refundedAmount, "Le montant remboursé doit être égal à la balance");
-		assertEquals(0, machine.getBalance(), "La balance doit être réinitialisée après remboursement");
+		// S7 : refund()rendcorrectement la monnaie
+	void refundMoney(){
+		machine.insertMoney(20);
+		assertEquals(machine.refund(), 20, "La machine ne rend pas correctement la monnaie");
 	}
 
 	@Test
-		// S8 : On peut changer le prix du ticket
-	void canChangePrice() {
-		machine.setPrice(60); // Changer le prix à 60 centimes
-		assertEquals(60, machine.getPrice(), "Le prix du ticket doit être mis à jour");
+		// S8 : refund()remet la balance à zéro
+	void refundMoneySetBalanceToZero(){
+		machine.insertMoney(20);
+		machine.refund();
+		assertEquals(machine.getBalance(), 0, "La machine ne réinitialise pas la balance correctement");
+	}
+
+	@Test
+		// S9 : on ne peut pas insérer un montant négatif
+	void cantInsertNegativeMoney(){
+		assertThrows(IllegalArgumentException.class, () -> {machine.insertMoney(-1);},  "La machine ne doit pas recevoir des montants négatifs");
+	}
+
+	@Test
+		// S10 : on ne peut pas créer de machine qui délivre des tickets dont le prix est négatif
+	void cantCreateTicketMachineWithNegativePrice(){
+		assertThrows(IllegalArgumentException.class, () -> {new TicketMachine(-1);}, "");
 	}
 }
